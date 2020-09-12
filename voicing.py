@@ -19,6 +19,27 @@ TENOR_RANGE = (Pitch("C3"), Pitch("G4"))
 BASS_RANGE = (Pitch("E2"), Pitch("C4"))
 
 
+voicingCache = {}
+costCache = {}
+
+def fetchVoicing(key, chord):
+    key_and_chord = (key, chord.figureAndKey)
+    if key_and_chord in voicingCache:
+        yield from voicingCache[key_and_chord]
+    else:
+        voicingCache[key_and_chord] = list(voiceChord(key, chord))
+        yield from voicingCache[key_and_chord]
+
+
+def fetchCost(key, chord1, chord2):
+    key_and_chords = (key, chord1.pitches, chord2.pitches)
+    if key_and_chords in costCache:
+        return costCache[key_and_chords]
+    else:
+        costCache[key_and_chords] = progressionCost(key, chord1, chord2)
+        return costCache[key_and_chords]
+
+
 def voiceNote(noteName, pitchRange):
     """Generates voicings for a note in a given pitch range.
 
@@ -171,7 +192,7 @@ def voiceProgression(key, chordProgression):
     dp = [{} for _ in chordProgression]
     for i, numeral in enumerate(chordProgression):
         chord = RomanNumeral(numeral, key)
-        voicings = voiceChord(key, chord)
+        voicings = fetchVoicing(key, chord)
         if i == 0:
             for v in voicings:
                 dp[0][v.pitches] = (chordCost(key, v), None)
@@ -180,7 +201,7 @@ def voiceProgression(key, chordProgression):
                 best = (float("inf"), None)
                 for pv_pitches, (pcost, _) in dp[i - 1].items():
                     pv = Chord(pv_pitches)
-                    ccost = pcost + progressionCost(key, pv, v)
+                    ccost = pcost + fetchCost(key, pv, v)
                     if ccost < best[0]:
                         best = (ccost, pv_pitches)
                 dp[i][v.pitches] = (best[0] + chordCost(key, v), best[1])
