@@ -224,7 +224,7 @@ def voiceProgression(key, chordProgression, numberOfAnswers=1):
     return ret if numberOfAnswers > 1 else ret[0]
 
 
-def generateScore(chords, lengths=None, ts="4/4"):
+def generateScore(chords, lengths=None, ts="4/4", key='C'):
     """Generates a four-part score from a sequence of chords.
 
     Soprano and alto parts are displayed on the top (treble) clef, while tenor
@@ -246,8 +246,8 @@ def generateScore(chords, lengths=None, ts="4/4"):
         voices[2].append(tenor)
         voices[3].append(bass)
 
-    female = Part([TrebleClef(), TimeSignature(ts), voices[0], voices[1]])
-    male = Part([BassClef(), TimeSignature(ts), voices[2], voices[3]])
+    female = Part([TrebleClef(), TimeSignature(ts), Key(key), voices[0], voices[1]])
+    male = Part([BassClef(), TimeSignature(ts), Key(key), voices[2], voices[3]])
     score = Score([female, male])
     return score
 
@@ -273,7 +273,7 @@ def generateChorale(chorale, lengths=None, ts="4/4"):
         progressions = voiceProgression(key, chords, numberOfAnswers=5)
         phrase, _ = progressions[0]
         progression.extend(phrase)
-    score = generateScore(progression, lengths, ts)
+    score = generateScore(progression, lengths, ts, key)
     return score
 
 
